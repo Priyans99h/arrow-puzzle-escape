@@ -334,8 +334,23 @@ const UI = {
       audioSystem.escape();
       const cell = this.root.querySelector(`[data-arrow-id="${arrow.id}"]`);
       if (cell) {
+        const board = document.getElementById('game-board');
+        const glyph = cell.querySelector('.arrow-glyph');
+        if (board && glyph) {
+          const boardRect = board.getBoundingClientRect();
+          const cellRect = cell.getBoundingClientRect();
+          const glyphRect = glyph.getBoundingClientRect();
+          const edgePadding = 16;
+          const distance = {
+            up: cellRect.top - boardRect.top + glyphRect.height + edgePadding,
+            down: boardRect.bottom - cellRect.bottom + glyphRect.height + edgePadding,
+            left: cellRect.left - boardRect.left + glyphRect.width + edgePadding,
+            right: boardRect.right - cellRect.right + glyphRect.width + edgePadding
+          }[arrow.dir];
+          cell.style.setProperty('--escape-distance', `${distance}px`);
+        }
         cell.classList.add('cell--escaping', `cell--escaping-${arrow.dir}`);
-        setTimeout(() => { cell.classList.add('cell--gone'); }, 260);
+        setTimeout(() => { cell.classList.add('cell--gone'); }, 650);
       }
       const remainingEl = document.getElementById('hud-remaining');
       if (remainingEl) remainingEl.innerHTML = `<strong>${s.remainingCount()}</strong> left`;
@@ -346,7 +361,12 @@ const UI = {
     s.onBlocked = (arrow) => {
       audioSystem.blocked();
       const cell = this.root.querySelector(`[data-arrow-id="${arrow.id}"]`);
-      this.flashError(cell);
+      if (cell) {
+        cell.classList.remove('cell--blocked');
+        void cell.offsetWidth;
+        cell.classList.add('cell--blocked');
+        setTimeout(() => cell.classList.remove('cell--blocked'), 360);
+      }
       const comboEl = document.getElementById('hud-combo');
       if (comboEl) comboEl.innerHTML = '';
     };
@@ -357,7 +377,7 @@ const UI = {
         comboEl.innerHTML = `<span class="combo-badge combo-pop">🔥 COMBO x${combo}</span>`;
       }
     };
-    s.onComplete = (result) => this.finishLevel(result);
+    s.onComplete = (result) => setTimeout(() => this.finishLevel(result), 680);
   },
 
   liveScoreEstimate() {
